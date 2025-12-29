@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>英単語学習ゲーム</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #eef2f7;
+  text-align: center;
+}
+h1 { margin-top: 20px; }
+button {
+  font-size: 18px;
+  padding: 10px 20px;
+  margin: 6px;
+}
+input {
+  font-size: 18px;
+  padding: 6px;
+  width: 80%;
+  max-width: 300px;
+}
+#card {
+  background: white;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+}
+#info {
+  min-height: 1.5em;
+}
+</style>
+</head>
+<body>
+
+<h1>英単語 学習ゲーム</h1>
+
+<!-- ホーム -->
+<div id="home">
+  <button onclick="start('practice')">練習モード</button><br>
+  <button onclick="start('challenge')">チャレンジ</button><br>
+  <button onclick="start('test')">測定モード</button>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="game" style="display:none;">
+  <div id="card">
+    <h2 id="question"></h2>
+    <input id="answer" placeholder="答えを入力">
+    <br><br>
+    <button onclick="check()">OK</button>
+  </div>
+  <p id="info"></p>
+  <button onclick="goHome()">もどる</button>
+</div>
+
+<script>
+const words = [
+  {en:"nice", ja:"すてきな、よい"},
+  {en:"meet", ja:"知り合いになる"},
+  {en:"good", ja:"よい"},
+  {en:"I", ja:"私は"},
+  {en:"hi", ja:"やあ、こんにちは"},
+  {en:"name", ja:"名前"},
+  {en:"hello", ja:"やあ、こんにちは"},
+  {en:"like", ja:"好む、好きである"},
+  {en:"yes", ja:"はい"},
+  {en:"to", ja:"すること"},
+  {en:"you", ja:"あなた"},
+  {en:"morning", ja:"朝、午前"},
+  {en:"am", ja:"です(Iと使う)"},
+  {en:"my", ja:"私の"},
+  {en:"is", ja:"です"},
+  {en:"do", ja:"疑問文を作る"},
+  {en:"tennis", ja:"テニス"},
+  {en:"cat", ja:"ネコ"},
+  {en:"egg", ja:"卵"},
+  {en:"tree", ja:"木"},
+  {en:"evening", ja:"夕方、晩"},
+  {en:"bat", ja:"バット"},
+  {en:"horse", ja:"ウマ"},
+  {en:"jump", ja:"とぶ"},
+  {en:"log", ja:"丸太"},
+  {en:"net", ja:"ネット"},
+  {en:"pan", ja:"平なべ"},
+  {en:"rabbit", ja:"ウサギ"},
+  {en:"umbrella", ja:"傘"},
+  {en:"wolf", ja:"オオカミ"},
+  {en:"yo-yo", ja:"ヨーヨー"},
+  {en:"gym", ja:"体育館"},
+  {en:"ice", ja:"氷"},
+  {en:"uniform", ja:"制服"},
+  {en:"ten", ja:"10"},
+  {en:"run", ja:"走る"},
+  {en:"cup", ja:"カップ"},
+  {en:"cut", ja:"切る"},
+  {en:"box", ja:"箱"},
+  {en:"desk", ja:"机"},
+  {en:"fan", ja:"扇風機・ファン"},
+  {en:"cap", ja:"帽子"},
+  {en:"milk", ja:"牛乳"},
+  {en:"dog", ja:"イヌ"},
+  {en:"flower", ja:"花"},
+  {en:"city", ja:"市、都市"},
+  {en:"apple", ja:"リンゴ"},
+  {en:"gorilla", ja:"ゴリラ"},
+  {en:"ink", ja:"インク"},
+  {en:"koala", ja:"コアラ"},
+  {en:"monkey", ja:"サル"},
+  {en:"octopus", ja:"タコ"},
+  {en:"queen", ja:"女王"},
+  {en:"snake", ja:"ヘビ"},
+  {en:"fox", ja:"キツネ"},
+  {en:"zipper", ja:"ジッパー"},
+  {en:"apron", ja:"エプロン"},
+  {en:"ocean", ja:"海"},
+  {en:"pen", ja:"ペン"},
+  {en:"sun", ja:"太陽"},
+  {en:"hot", ja:"暑い"},
+  {en:"map", ja:"地図"},
+  {en:"TV", ja:"テレビ"},
+  {en:"bag", ja:"かばん"},
+  {en:"bed", ja:"ベッド"},
+  {en:"hat", ja:"帽子"},
+  {en:"mop", ja:"モップ"},
+  {en:"red", ja:"赤い"},
+  {en:"play", ja:"する・演奏する"},
+  {en:"have", ja:"持っている"},
+  {en:"want", ja:"ほしい"},
+  {en:"soccer", ja:"サッカー"},
+  {en:"call", ja:"呼ぶ"},
+  {en:"love", ja:"大好き"},
+  {en:"friend", ja:"友達"},
+  {en:"school", ja:"学校"},
+  {en:"game", ja:"ゲーム"},
+
+  // 連語
+  {en:"How about you?", ja:"あなたはどうですか"},
+  {en:"Nice to meet you.", ja:"はじめまして"},
+  {en:"Good morning.", ja:"おはようございます"},
+  {en:"Call me ...", ja:"私を〜と呼んでください"},
+  {en:"want to", ja:"〜したい"}
+];
+
+let mode;
+let current;
+let count = 0;
+let startTime = 0;
+
+function start(m){
+  mode = m;
+  count = 0;
+  document.getElementById("home").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  if(mode === "test") startTime = Date.now();
+  nextQuestion();
+}
+
+function nextQuestion(){
+  document.getElementById("answer").value = "";
+  document.getElementById("info").textContent = "";
+  current = words[Math.floor(Math.random()*words.length)];
+  current.askEN = Math.random() < 0.5;
+  document.getElementById("question").textContent =
+    current.askEN ? current.en : current.ja;
+}
+
+function check(){
+  const input = document.getElementById("answer").value.trim();
+  const correct = current.askEN ? current.ja : current.en;
+
+  if(input === correct){
+    count++;
+    if(mode === "test" && count === 10){
+      const time = ((Date.now()-startTime)/1000).toFixed(2);
+      alert("10問完了！\nタイム：" + time + "秒");
+      goHome();
+    } else {
+      nextQuestion();
+    }
+  } else {
+    if(mode === "challenge"){
+      alert("ミス！ホームに戻ります");
+      goHome();
+    } else {
+      document.getElementById("info").textContent =
+        "不正解！ 正解：" + correct;
+      nextQuestion();
+    }
+  }
+}
+
+function goHome(){
+  document.getElementById("game").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
+</script>
+
+</body>
+</html>
